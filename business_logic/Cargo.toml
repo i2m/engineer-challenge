@@ -1,0 +1,9 @@
+[package]
+name = "business_logic"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+email-validator-rfc5322 = "0.1.0"
+sha2 = "0.10.9"
+uuid = { version = "1.22.0", features = ["v4"] }
