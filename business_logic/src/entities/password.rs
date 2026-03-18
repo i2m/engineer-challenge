@@ -1,21 +1,45 @@
+use sha2::{Digest, Sha256};
+
 const MIN_PASSWORD_LENGTH: usize = 8;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Password(pub(crate) String);
 
-impl TryFrom<(String, String)> for Password {
+impl TryFrom<String> for Password {
     type Error = String;
 
-    fn try_from((password, confirm_password): (String, String)) -> Result<Self, Self::Error> {
-        if password != confirm_password {
-            return Err(String::from("Invalid password: do not match"));
-        }
-
+    fn try_from(password: String) -> Result<Self, Self::Error> {
         // simple password validation
         match password.len() >= MIN_PASSWORD_LENGTH {
             true => Ok(Password(password)),
             false => Err(format!("Invalid password: length < {MIN_PASSWORD_LENGTH}")),
         }
+    }
+}
+
+impl TryFrom<(String, String)> for Password {
+    type Error = String;
+
+    fn try_from((password, confirm_password): (String, String)) -> Result<Self, Self::Error> {
+        let password = Password::try_from(password)?;
+        let confirm_password = Password::try_from(confirm_password)?;
+
+        if password != confirm_password {
+            return Err(String::from("Invalid password: do not match"));
+        }
+
+        Ok(password)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HashedPassword(String);
+
+impl From<Password> for HashedPassword {
+    fn from(password: Password) -> Self {
+        let mut hasher = Sha256::new();
+        hasher.update(password.0.as_bytes());
+        HashedPassword(format!("{:x}", hasher.finalize()))
     }
 }
 

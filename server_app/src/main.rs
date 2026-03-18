@@ -2,10 +2,11 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use business_logic::{
+    auth_by_email_and_password, auth_by_session,
     entities::{
         account::Account,
         email::Email,
-        requests::{RegisterUserRequest, ValidRegisterUserRequest},
+        requests::{AuthRequest, RegisterUserRequest, ValidRegisterUserRequest},
     },
     operation::Operation,
     register_new_user,
@@ -31,15 +32,25 @@ async fn main() {
         Err(err) => println!("--register_user_workflow: Err({err:?})--"),
     }
 
-    let reg_user_2_req = RegisterUserRequest {
-        email: String::from("user2@host.com"),
+    let auth_user_req = AuthRequest {
+        email: String::from("user1@host.com"),
         password: String::from("12345678"),
-        confirm_password: String::from("12345678"),
     };
-    let register_user2_workflow = register_new_user(reg_user_2_req);
-    match exec(register_user2_workflow, storage.clone()).await {
-        Ok(value) => println!("--register_user2_workflow: Ok({value:?})--"),
-        Err(err) => println!("--register_user2_workflow: Err({err:?})--"),
+    let auth_user_workflow = auth_by_email_and_password(auth_user_req);
+    match exec(auth_user_workflow, storage.clone()).await {
+        Ok(account) => {
+            println!("--auth_by_email_and_password_workflow: Ok({account:?})--");
+            match account.try_into() {
+                Ok(session) => match exec(auth_by_session(session), storage.clone()).await {
+                    Ok(account) => println!("--auth_by_session_workflow: Ok({account:?})--"),
+                    Err(err) => println!("--auth_by_session_workflow: Err({err:?})--"),
+                },
+                Err(err) => {
+                    println!("--auth_by_email_and_password_workflow: Err({err:?})--")
+                }
+            }
+        }
+        Err(err) => println!("--auth_by_email_and_password_workflow: Err({err:?})--"),
     }
 
     println!("--program end--");
@@ -60,6 +71,10 @@ async fn exec<T>(workflow: Workflow<T>, storage: Arc<dyn Storage>) -> T {
                 let finded_account = storage.find_user_account(&email).await;
                 Box::pin(exec(*next(finded_account), storage.clone())).await
             }
+            Operation::ValidateAuthRequest(validation, next) => {
+                Box::pin(exec(*next(validation), storage.clone())).await
+            }
+            Operation::Auth(session, next) => Box::pin(exec(*next(session), storage.clone())).await,
         },
     }
 }

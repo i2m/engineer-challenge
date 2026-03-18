@@ -1,6 +1,7 @@
 use email_validator_rfc5322::validate_email;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Email(String);
 
 impl TryFrom<String> for Email {

@@ -12,3 +12,15 @@ pub struct ValidRegisterUserRequest {
     pub email: Email,
     pub password: Password,
 }
+
+#[derive(Clone, Debug)]
+pub struct AuthRequest {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct ValidAuthRequest {
+    pub email: Email,
+    pub password: Password,
+}
