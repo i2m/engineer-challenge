@@ -14,6 +14,12 @@ impl TryFrom<String> for Email {
     }
 }
 
+impl From<Email> for String {
+    fn from(email: Email) -> Self {
+        email.0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

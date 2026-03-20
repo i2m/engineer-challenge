@@ -1,7 +1,11 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::entities::{email::Email, password::HashedPassword, requests::ValidRegisterUserRequest};
+use crate::entities::{
+    email::Email,
+    password::{HashedPassword, Password},
+    requests::ValidRegisterUserRequest,
+};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AccountID(Uuid);
@@ -11,6 +15,16 @@ pub struct Account {
     pub id: AccountID,
     pub email: Email,
     pub(crate) hashed_password: HashedPassword,
+}
+
+impl Account {
+    pub fn change_password(self, new_password: Password) -> Self {
+        Self {
+            id: self.id,
+            email: self.email,
+            hashed_password: new_password.into(),
+        }
+    }
 }
 
 impl From<&ValidRegisterUserRequest> for Account {
