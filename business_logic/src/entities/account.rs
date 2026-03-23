@@ -10,6 +10,12 @@ use crate::entities::{
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AccountID(Uuid);
 
+impl From<AccountID> for String {
+    fn from(account_id: AccountID) -> Self {
+        account_id.0.into()
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Account {
     pub id: AccountID,

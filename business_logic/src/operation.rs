@@ -16,55 +16,55 @@ pub enum Operation<T> {
     /// User registration
     ValidateRegisterUserRequest(
         Result<ValidRegisterUserRequest, String>,
-        Box<dyn FnOnce(Result<ValidRegisterUserRequest, String>) -> T>,
+        Box<dyn FnOnce(Result<ValidRegisterUserRequest, String>) -> T + Send>,
     ),
     CreateUserAccountInStore(
         ValidRegisterUserRequest,
-        Box<dyn FnOnce(Result<Account, String>) -> T>,
+        Box<dyn FnOnce(Result<Account, String>) -> T + Send>,
     ),
 
     /// User authorization
     Auth(
         Result<Account, String>,
-        Box<dyn FnOnce(Result<Account, String>) -> T>,
+        Box<dyn FnOnce(Result<Account, String>) -> T + Send>,
     ),
 
     /// Reset User password
     ValidateSendResetPasswordCodeRequest(
         Result<ValidSendResetPasswordCodeRequest, String>,
-        Box<dyn FnOnce(Result<ValidSendResetPasswordCodeRequest, String>) -> T>,
+        Box<dyn FnOnce(Result<ValidSendResetPasswordCodeRequest, String>) -> T + Send>,
     ),
     SendResetPasswordCode(
         (Email, ResetPasswordCode),
-        Box<dyn FnOnce(Result<(Email, ResetPasswordCode), String>) -> T>,
+        Box<dyn FnOnce(Result<(Email, ResetPasswordCode), String>) -> T + Send>,
     ),
 
     ValidateResetPasswordRequest(
         Result<ValidResetPasswordRequest, String>,
-        Box<dyn FnOnce(Result<ValidResetPasswordRequest, String>) -> T>,
+        Box<dyn FnOnce(Result<ValidResetPasswordRequest, String>) -> T + Send>,
     ),
     ResetPassword(
         ValidResetPasswordRequest,
-        Box<dyn FnOnce(Result<Account, String>) -> T>,
+        Box<dyn FnOnce(Result<Account, String>) -> T + Send>,
     ),
 
     FindResetPasswordCode(
         Email,
-        Box<dyn FnOnce(Result<ResetPasswordCode, String>) -> T>,
+        Box<dyn FnOnce(Result<ResetPasswordCode, String>) -> T + Send>,
     ),
 
     /// User account
-    FindUserAccountInStore(Email, Box<dyn FnOnce(Result<Account, String>) -> T>),
+    FindUserAccountInStore(Email, Box<dyn FnOnce(Result<Account, String>) -> T + Send>),
 
     ValidateAuthRequest(
         Result<ValidAuthRequest, String>,
-        Box<dyn FnOnce(Result<ValidAuthRequest, String>) -> T>,
+        Box<dyn FnOnce(Result<ValidAuthRequest, String>) -> T + Send>,
     ),
 }
 
 /// Operation as Functor instance methods
 impl<T: 'static> Operation<T> {
-    pub fn map<U: 'static>(self, f: impl FnOnce(T) -> U + 'static) -> Operation<U> {
+    pub fn map<U: 'static>(self, f: impl FnOnce(T) -> U + Send + 'static) -> Operation<U> {
         match self {
             Operation::ValidateRegisterUserRequest(validation, next) => {
                 Operation::ValidateRegisterUserRequest(

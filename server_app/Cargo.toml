@@ -6,5 +6,10 @@ edition = "2024"
 [dependencies]
 async-trait = "0.1.89"
 business_logic = { path = "../business_logic" }
+grpc = { path = "../grpc"}
+prost = { workspace = true }
 tokio = { workspace = true, features = ["macros", "tokio-macros", "sync", "time", "rt", "rt-multi-thread"] }
+tokio-stream = { workspace = true }
+tonic = { workspace = true }
+tonic-prost = { workspace = true }
 whirlwind = "0.1.1"

@@ -60,7 +60,7 @@ mod tests {
     #[should_panic(expected = "Invalid password: do not match")]
     fn password_not_match() -> () {
         let str = String::from("12345678");
-        let confirm_str = String::from("1234");
+        let confirm_str = String::from("12345679");
         Password::try_from((str, confirm_str)).unwrap();
     }
 
