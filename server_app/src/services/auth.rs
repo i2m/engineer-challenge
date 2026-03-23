@@ -1,28 +1,31 @@
 use std::sync::Arc;
 
 use business_logic::{
-    auth_by_email_and_password,
+    auth_by_email_and_password, auth_by_session,
     entities::{
         email::Email,
         requests::{
             AuthRequest, RegisterUserRequest, ResetPasswordRequest, SendResetPasswordCodeRequest,
         },
+        session::Session,
     },
     register_new_user, reset_password, send_reset_password_code,
 };
 use grpc::{
     auth_service::{
-        AccountMessage, AuthRequestMessage, RegisterUserRequestMessage,
+        AccountMessage, AuthRequestMessage, EmptyRequestMessage, RegisterUserRequestMessage,
         ResetPasswordRequestMessage, SendResetPasswordCodeRequestMessage, TextResponseMessage,
     },
     auth_service_server::AuthService,
 };
-use tonic::{Response, Status};
+use tonic::{Response, Status, metadata::MetadataValue};
 
 use crate::{
     services::{email_sender::EmailSender, storage::Storage},
     workflow_executor::exec,
 };
+
+static AUTHORIZATION_HEADER: &str = "authorization";
 
 pub struct SimpleAuthService {
     pub storage: Arc<dyn Storage>,
@@ -69,10 +72,23 @@ impl AuthService for SimpleAuthService {
         match exec(auth_user_workflow, self.storage.clone()).await {
             Ok(account) => {
                 let resp_msg = AccountMessage {
-                    id: account.id.into(),
-                    email: account.email.into(),
+                    id: account.clone().id.into(),
+                    email: account.clone().email.into(),
                 };
-                Ok(Response::new(resp_msg))
+
+                let session: Session = account
+                    .try_into()
+                    .map_err(|err| Status::internal(format!("Parse account {err}")))?;
+                let token: MetadataValue<_> = session
+                    .token()
+                    .parse()
+                    .map_err(|err| Status::internal(format!("Invalid token {err}")))?;
+
+                let mut resp = Response::new(resp_msg);
+                resp.metadata_mut()
+                    .insert(AUTHORIZATION_HEADER, token.clone());
+
+                Ok(resp)
             }
             Err(err) => Err(Status::internal(err)),
         }
@@ -126,6 +142,33 @@ impl AuthService for SimpleAuthService {
 
         let reset_password_workflow = reset_password(req.clone());
         match exec(reset_password_workflow, self.storage.clone()).await {
+            Ok(account) => {
+                let resp_msg = AccountMessage {
+                    id: account.id.into(),
+                    email: account.email.into(),
+                };
+                Ok(Response::new(resp_msg))
+            }
+            Err(err) => Err(Status::internal(err)),
+        }
+    }
+
+    async fn who_am_i(
+        &self,
+        request: tonic::Request<EmptyRequestMessage>,
+    ) -> Result<Response<AccountMessage>, Status> {
+        let Some(token) = request.metadata().get(AUTHORIZATION_HEADER) else {
+            return Err(Status::unauthenticated(String::from(
+                "Authorization token is missing",
+            )));
+        };
+        let token = token
+            .to_str()
+            .map_err(|err| Status::invalid_argument(format!("Token parse {err}")))?;
+        let session: Session = Session(token.into());
+
+        let auth_by_session_workflow = auth_by_session(session);
+        match exec(auth_by_session_workflow, self.storage.clone()).await {
             Ok(account) => {
                 let resp_msg = AccountMessage {
                     id: account.id.into(),

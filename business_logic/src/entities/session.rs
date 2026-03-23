@@ -12,7 +12,13 @@ use crate::entities::{
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub struct Session(String);
+pub struct Session(pub String);
+
+impl Session {
+    pub fn token(&self) -> String {
+        self.0.clone()
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
