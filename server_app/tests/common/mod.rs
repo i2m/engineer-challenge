@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use business_logic::{
-    auth_by_email_and_password,
     entities::{
         account::Account,
         email::Email,
@@ -10,7 +9,9 @@ use business_logic::{
             SendResetPasswordCodeRequest,
         },
     },
-    register_new_user, reset_password, send_reset_password_code,
+    workflow::{
+        auth_by_email_and_password, register_new_user, reset_password, send_reset_password_code,
+    },
 };
 use server_app::{services::storage::Storage, workflow_executor::exec};
 

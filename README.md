@@ -1,6 +1,6 @@
 # Advanced Engineer Challenge
 
-Build a simple auth module ( register / login / reset) using DDD patterns.
+Build a *simple* auth module ( register / login / reset) using DDD patterns.
 
 - Map out the bounded context and ubiquitous language
 - Model the aggregates
@@ -8,9 +8,7 @@ Build a simple auth module ( register / login / reset) using DDD patterns.
 - Keep layers clean (domain vs application vs infrastructure)
 - In-memory storages are totally fine
 
-Make a short README explaining your architectural decisions.
-
-Show conscious design, not just CRUD.
+Show conscious *design*.
 
 
 ## App schema
@@ -93,26 +91,3 @@ Body:de39615a-2de3-43e1-8448-2e81fc3d5f12
 ```
 grpcurl -plaintext -import-path ./grpc/proto -proto auth_service.proto -d '{"email": "user1@host.com", "password": "123456789", "confirm_password": "123456789", "reset_password_code": "de39615a-2de3-43e1-8448-2e81fc3d5f12"}' '[::1]:50051' auth_service.AuthService/ResetPassword
 ```
-
-## Why Rust?
-
-Statically typed language
-
-Predictable Performance (no garbage collector)
-
-Safe (ownership & borrowing)
-
-Excellent portability (web browsers (via WASM), microcontrollers (via no_std), Android and iOS (via UniFFI))
-
-## Why Free Monads?
-
-Using Free Monads in DDD separates domain logic ("what to do") from implementation details ("how to do it") by representing business operations as pure data structures (ASTs).
-
-This allows modeling complex workflows as operations that are later interpreted and executed by executors (e.g., database, API).
-
-## What todo next
-
-Collect telemetry
-
-Improve error types (from String to Enums)
-

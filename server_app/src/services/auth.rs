@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use business_logic::{
-    auth_by_email_and_password, auth_by_session,
     entities::{
         email::Email,
         requests::{
@@ -9,7 +8,10 @@ use business_logic::{
         },
         session::Session,
     },
-    register_new_user, reset_password, send_reset_password_code,
+    workflow::{
+        auth_by_email_and_password, auth_by_session, register_new_user, reset_password,
+        send_reset_password_code,
+    },
 };
 use grpc::{
     auth_service::{
